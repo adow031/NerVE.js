@@ -1,33 +1,4 @@
 var svgns = "http://www.w3.org/2000/svg";
-var network = {
-	container: null,
-	zoomTree: null,
-	nodes: [],
-	edges: [],
-  pan: [-1,-1],
-  selected: -1,
-	highlighted: -1,
-  defaults: {
-		node: {
-			colour: "black",
-			box: [50,50],
-			dims: [25,25],
-			border: {
-				colour: "black",
-				thickness: 2,
-			},
-			padding: [0,0],
-			radius: 10,
-			visible: true,
-		},
-		edges: {
-			colour: "black",
-			thickness: 2,
-			style: "solid",
-			visible:  true,
-		},
-	}
-};
 
 function redraw_nodes(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
@@ -78,6 +49,18 @@ function redraw_nodes(nervejs) {
 			circle.setAttributeNS(null, 'style', 'fill: '+colour+'; stroke: white; stroke-width: '+border.thickness.toString()+'px;' );
 
 			node.circle.appendChild(circle);
+		}
+	}
+
+	for (var i = 0; i < nervejs.nodes.length; i++) {
+		var node = nervejs.nodes[i];
+		if (node.visible==undefined) {
+			visible=nervejs.defaults.node.visible;
+		}
+		else {
+			visible=node.visible;
+		}
+		if (visible) {
 			if (node.text!=undefined && node.text!=null) {
 				text=document.createElementNS(svgns, 'text');
 				text.setAttributeNS(null, 'x', node.text.offset[0]);
@@ -86,7 +69,7 @@ function redraw_nodes(nervejs) {
 				text.setAttributeNS(null, 'font-size', node.text.fontsize);
 				text.setAttributeNS(null, 'dominant-baseline', node.text.valign);
 				text.appendChild(document.createTextNode(node.text.content));
-				nodes[i].circle.appendChild(text);
+				node.circle.appendChild(text);
 			}
 			var title = document.createElementNS(svgns,"title");
 			title.textContent = node.title;
@@ -161,19 +144,19 @@ function createEdges(nervejs) {
 	for (var i = 0; i < nervejs.edges.length; i++) {
 		edge = nervejs.edges[i];
 		if (edge.visible==undefined) {
-			visible=nervejs.defaults.edges.visible;
+			visible=nervejs.defaults.edge.visible;
 		}
 		else {
 			visible=edge.visible;
 		}
 		if (edge.colour==undefined) {
-			colour=nervejs.defaults.edges.colour;
+			colour=nervejs.defaults.edge.colour;
 		}
 		else {
 			colour=edge.colour;
 		}
 		if (edge.thickness==undefined) {
-			thickness=nervejs.defaults.edges.thickness;
+			thickness=nervejs.defaults.edge.thickness;
 		}
 		else {
 			thickness=edge.thickness;
@@ -193,13 +176,13 @@ function createEdges(nervejs) {
 
 function clickEvent(nervejs,arg) {
 	if(arg>=0 || (nervejs.pan[0]==-1 && nervejs.pan[1]==-1)) {
-		nervejs.pan[0]=container.children[0].transform.baseVal[0].matrix.e;
-		nervejs.pan[1]=container.children[0].transform.baseVal[0].matrix.f;
+		nervejs.pan[0]=nervejs.container.children[0].transform.baseVal[0].matrix.e;
+		nervejs.pan[1]=nervejs.container.children[0].transform.baseVal[0].matrix.f;
 	}
 
-	if(container.children[0].transform.baseVal[0].matrix.e!=nervejs.pan[0] || container.children[0].transform.baseVal[0].matrix.f!=nervejs.pan[1]) {
-		nervejs.pan[0]=container.children[0].transform.baseVal[0].matrix.e;
-		nervejs.pan[1]=container.children[0].transform.baseVal[0].matrix.f;
+	if(nervejs.container.children[0].transform.baseVal[0].matrix.e!=nervejs.pan[0] || nervejs.container.children[0].transform.baseVal[0].matrix.f!=nervejs.pan[1]) {
+		nervejs.pan[0]=nervejs.container.children[0].transform.baseVal[0].matrix.e;
+		nervejs.pan[1]=nervejs.container.children[0].transform.baseVal[0].matrix.f;
 		return;
 	}
 
@@ -214,7 +197,7 @@ function clickEvent(nervejs,arg) {
 	}
 
 	if (typeof node_select === 'function') {
-		node_select(nervejs.selected);
+		node_select(nervejs,nervejs.selected);
 	}
 }
 
@@ -232,15 +215,51 @@ function mouseoverEvent(nervejs,arg) {
 	}
 }
 
-function createSVGnetwork(nervejs,nodes,edges) {
-	nervejs.nodes=nodes;
-	nervejs.edges=edges;
+function clearSVGnetwork(nervejs) {
+	for(n in nervejs.nodes) {
+		nervejs.nodes[n].circle.innerHTML="";
+	}
+	if (nervejs.container.parentElement!=undefined) {
+		nervejs.container.parentElement.innerHTML="";
+	}
+}
+
+function createSVGnetwork(nodes,edges) {
+	var nervejs = {
+		container: null,
+		zoomTree: null,
+		nodes: nodes,
+		edges: edges,
+	  pan: [-1,-1],
+	  selected: -1,
+		highlighted: -1,
+	  defaults: {
+			node: {
+				colour: "black",
+				box: [50,60],
+				dims: [25,30],
+				border: {
+					colour: "black",
+					thickness: 2,
+				},
+				padding: [0,0],
+				radius: 10,
+				visible: true,
+			},
+			edge: {
+				colour: "black",
+				thickness: 2,
+				style: "solid",
+				visible:  true,
+			},
+		}
+	};
+
 	container = document.createElementNS(svgns, "svg");
 	container.setAttribute ("width", "100%");
 	container.setAttribute ("height", "100%");
 	container.setAttributeNS(null, 'style', 'padding: 0px;' );
 	container.addEventListener('wheel', evt => evt.preventDefault());
-
 
 	container.onclick = (function (nervejs,arg) {
 				return function () {
@@ -255,5 +274,8 @@ function createSVGnetwork(nervejs,nodes,edges) {
 					mouseoverEvent(nervejs,arg);
 				};
 			})(nervejs,-1);
+
 	nervejs.container=container;
+
+	return nervejs;
 }
