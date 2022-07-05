@@ -46,7 +46,7 @@ function redraw_nodes(nervejs) {
 
 			circle=makeCircle(dims[0],dims[1],radius);
 
-			circle.setAttributeNS(null, 'style', 'fill: '+colour+'; stroke: white; stroke-width: '+border.thickness.toString()+'px;' );
+			circle.setAttributeNS(null, 'style', 'fill: '+colour+'; stroke: '+border.colour+'; stroke-width: '+border.thickness.toString()+'px;' );
 
 			node.circle.appendChild(circle);
 		}
@@ -192,8 +192,8 @@ function clickEvent(nervejs,arg) {
 	nervejs.selected=arg;
 	nervejs.highlighted=-1;
 	if(arg>=0) {
-		nervejs.nodes[arg].circle.children[0].style.stroke="black";
-		nervejs.nodes[arg].circle.children[0].style.strokeWidth="6px";
+		nervejs.nodes[arg].circle.children[0].style.stroke=nervejs.defaults.node.border.selected.colour;
+		nervejs.nodes[arg].circle.children[0].style.strokeWidth=nervejs.defaults.node.border.selected.thickness.toString()+"px";
 	}
 
 	if (typeof node_select === 'function') {
@@ -209,8 +209,8 @@ function mouseoverEvent(nervejs,arg) {
 	if (nervejs.selected!=arg) {
 		nervejs.highlighted=arg;
 		if(arg>=0) {
-			nervejs.nodes[arg].circle.children[0].style.stroke="grey";
-			nervejs.nodes[arg].circle.children[0].style.strokeWidth="5px";
+			nervejs.nodes[arg].circle.children[0].style.stroke=nervejs.defaults.node.border.hover.colour;
+			nervejs.nodes[arg].circle.children[0].style.strokeWidth=nervejs.defaults.node.border.hover.thickness.toString()+"px";
 		}
 	}
 }
@@ -239,8 +239,16 @@ function createSVGnetwork(nodes,edges) {
 				box: [50,60],
 				dims: [25,30],
 				border: {
-					colour: "black",
+					colour: "white",
 					thickness: 2,
+					hover: {
+						colour: "grey",
+						thickness: 5,
+					},
+					selected: {
+						colour: "black",
+						thickness: 6,
+					}
 				},
 				padding: [0,0],
 				radius: 10,
