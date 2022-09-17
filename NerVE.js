@@ -3,11 +3,17 @@ var svgns = "http://www.w3.org/2000/svg";
 function update_node_style(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
 		var node = nervejs.nodes[i];
-		var keys = ['visible','colour','border.thickness','border.colour'];
+		var keys = ['visible','colour','border.thickness','border.colour','interactive','order'];
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
+		if(dummy.order="top" && dummy.interactive) {
+			index=2;
+		}
+		else {
+			index=0;
+		}
 
-		if (node.circle!=undefined && node.circle.children[1]!=undefined) {
-			shp=node.circle.children[1];
+		if (node.circle!=undefined && node.circle.children[0].children[index]!=undefined) {
+			shp=node.circle.children[0].children[index];
 			shp.setAttributeNS(null, 'style', 'fill: '+dummy.colour+'; stroke: '+dummy.border.colour.normal+'; stroke-width: '+dummy.border.thickness.normal+'px;' );
 		}
 	}
@@ -21,13 +27,6 @@ function update_node_text(nervejs) {
 				// var keys = ['text.offset','text.halign','text.fontsize','text.valign','text.stroke','text.fill','text.strokewidth','text.fontweight'];
 				// dummy = getDefaults(nervejs.defaults.node,node,keys);
 				text=node.circle.children[2];
-				// text.setAttributeNS(null, 'text-anchor', dummy.text.halign);
-				// text.setAttributeNS(null, 'font-size', dummy.text.fontsize);
-				// text.setAttributeNS(null, 'dominant-baseline', dummy.text.valign);
-				// text.setAttributeNS(null, 'stroke', dummy.text.stroke);
-				// text.setAttributeNS(null, 'stroke-width', dummy.text.strokewidth);
-				// text.setAttributeNS(null, 'fill', dummy.text.fill);
-				// text.setAttributeNS(null, 'font-weight', dummy.text.fontweight);
 				text.textContent=node.text.content;
 			}
 		}
@@ -41,7 +40,8 @@ function update_node_text(nervejs) {
 
 function redraw_nodes(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
-		var circle;// = document.createElementNS(svgns, 'circle');
+		var nodesvg = document.createElementNS(svgns, 'svg');
+		nodesvg.setAttributeNS(null, 'overflow','visible');
 		var node = nervejs.nodes[i];
 		var keys = ['radius','visible','border.thickness','border.colour','shape','rx','ry','colour','interactive','order'];
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
@@ -78,7 +78,7 @@ function redraw_nodes(nervejs) {
 				shp.setAttributeNS(null, 'style', 'fill: '+dummy.colour+'; stroke: '+dummy.border.colour.normal+'; stroke-width: '+dummy.border.thickness.normal+'px;' );
 			}
 
-			if(dummy.order=="bottom") node.circle.appendChild(shp);
+			if(dummy.order=="bottom") nodesvg.appendChild(shp);
 			if(dummy.interactive) {
 				shphover.style.display = "none";				
 				shpselect.style.display = "none";
@@ -90,10 +90,11 @@ function redraw_nodes(nervejs) {
 					shphover.style.strokeWidth=dummy.border.thickness.hover.toString()+"px";
 				}				
 				
-				node.circle.appendChild(shphover);
-				node.circle.appendChild(shpselect);
+				nodesvg.appendChild(shphover);
+				nodesvg.appendChild(shpselect);
 			}
-			if(dummy.order!="bottom") node.circle.appendChild(shp);			
+			if(dummy.order!="bottom") nodesvg.appendChild(shp);			
+			node.circle.appendChild(nodesvg);
 		}
 	}
 
@@ -237,22 +238,6 @@ function createNodes(nervejs) {
 
 		node.circle.appendChild(g);
 
-		//node.circle.setAttributeNS(null, 'ondblclick',"event.stopPropagation();doubleclickEvent("+i.toString()+")");
-
-		// node.circle.onclick = (function (network,arg) {
-		// 			return function () {
-		// 				event.stopPropagation();
-		// 				clickEvent(network,arg,"node");
-		// 			};
-		// 		})(nervejs,i);
-		//
-		// node.circle.onmouseover = (function (network,arg) {
-		//       return function () {
-		// 				event.stopPropagation();
-		// 				mouseoverEvent(network,arg,"node");
-		//       };
-		//     })(nervejs,i);
-
 		node.circle.setAttributeNS(null, 'x', node.X);
 		node.circle.setAttributeNS(null, 'y', node.Y);
 
@@ -329,21 +314,6 @@ function createEdges(nervejs) {
 			line.setAttribute("stroke", "rgba(0,0,0,0)");
 			line.setAttribute("stroke-width", dummy.thickness.normal*dummy.scale*5);
 			line.setAttribute("id", i);
-			//line.setAttribute("filter","url(#my-filter)");
-
-			// line.onclick = (function (network,arg) {
-			// 			return function () {
-			// 				event.stopPropagation();
-			// 				clickEvent(network,arg,"edge");
-			// 			};
-			// 		})(nervejs,i);
-			//
-			// line.onmouseover = (function (network,arg) {
-			// 			return function () {
-			// 				event.stopPropagation();
-			// 				mouseoverEvent(network,arg,"edge");
-			// 			};
-			// 		})(nervejs,i);
 
 			nervejs.container.appendChild(edge.line);
 
@@ -379,9 +349,8 @@ function clickEvent(nervejs,arg,obj) {
 		else {
 			index=1;
 		}		
-		node.circle.children[index].style.display="none";
-		node.circle.children[index-1].style.display="none";
-		//nervejs.nodes[nervejs.selected].circle.children[0].style.strokeWidth="0px";
+		node.circle.children[0].children[index].style.display="none";
+		node.circle.children[0].children[index-1].style.display="none";
 	}
 
 	if(nervejs.edgeselected>=0) {
@@ -448,10 +417,7 @@ function clickEvent(nervejs,arg,obj) {
 			else {
 				index=1;
 			}
-			node.circle.children[index].style.display="";
-			
-			//node.circle.children[0].style.stroke=dummy.border.colour.select;
-			//node.circle.children[0].style.strokeWidth=dummy.border.thickness.select.toString()+"px";
+			node.circle.children[0].children[index].style.display="";
 		}
 		if(nervejs.selected!=arg) {
 			nervejs.selected=arg;
@@ -509,10 +475,8 @@ function mouseoverEvent(nervejs,arg,obj) {
 		else {
 			index=1;
 		}		
-		node.circle.children[index].style.display="none";
-		node.circle.children[index-1].style.display="none";		
-		//nervejs.nodes[nervejs.highlighted].circle.children[0].style.stroke="black";
-		//nervejs.nodes[nervejs.highlighted].circle.children[0].style.strokeWidth="0px";
+		node.circle.children[0].children[index].style.display="none";
+		node.circle.children[0].children[index-1].style.display="none";		
 	}
 	if (nervejs.edgehighlighted!=-1) {
 		var keys = ['thickness','colour','dasharray','scale'];
@@ -521,7 +485,7 @@ function mouseoverEvent(nervejs,arg,obj) {
 		nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-width", dummy.thickness.normal*dummy.scale);
 		nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-dasharray", dummy.dasharray.normal);
 	}
-	
+
 	if(obj=="node") {
 		var keys = ['interactive'];
 		dummy = getDefaults(nervejs.defaults.node,nervejs.nodes[arg],keys);
@@ -556,12 +520,7 @@ function mouseoverEvent(nervejs,arg,obj) {
 				else {
 					index=1;
 				}
-				node.circle.children[index-1].style.display="";				
-				//node = nervejs.nodes[arg];
-				//keys = ['border.colour','border.thickness'];
-				//dummy = getDefaults(nervejs.defaults.node,node,keys);
-				//nervejs.nodes[arg].circle.children[0].style.stroke=dummy.border.colour.hover;
-				//nervejs.nodes[arg].circle.children[0].style.strokeWidth=dummy.border.thickness.hover.toString()+"px";
+				node.circle.children[0].children[index-1].style.display="";				
 			}
 		}
 	}
@@ -679,8 +638,8 @@ function createSVGnetwork(nodes,edges) {
 					else if(event.target.constructor==SVGLineElement) {
 						clickEvent(network,parseInt(event.target.id),"edge");
 					}
-					else if(event.target.parentElement.parentElement.id!=undefined) {
-						clickEvent(network,parseInt(event.target.parentElement.parentElement.id),"node");
+					else if(event.target.parentElement.parentElement.parentElement.id!=undefined) {
+						clickEvent(network,parseInt(event.target.parentElement.parentElement.parentElement.id),"node");
 					}
 				};
 			})(nervejs);
@@ -694,8 +653,8 @@ function createSVGnetwork(nodes,edges) {
 					else if(event.target.constructor==SVGLineElement) {
 						mouseoverEvent(network,parseInt(event.target.id),"edge");
 					}
-					else if(event.target.parentElement.parentElement.id!=undefined) {
-						mouseoverEvent(network,parseInt(event.target.parentElement.parentElement.id),"node");
+					else if(event.target.parentElement.parentElement.parentElement.id!=undefined) {
+						mouseoverEvent(network,parseInt(event.target.parentElement.parentElement.parentElement.id),"node");
 					}
 				};
 			})(nervejs);
