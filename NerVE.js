@@ -43,29 +43,57 @@ function redraw_nodes(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
 		var circle;// = document.createElementNS(svgns, 'circle');
 		var node = nervejs.nodes[i];
-		var keys = ['radius','visible','border.thickness','border.colour','shape','rx','ry','colour'];
+		var keys = ['radius','visible','border.thickness','border.colour','shape','rx','ry','colour','interactive','order'];
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
-
-		t1=dummy.border.thickness;
 
 		if (dummy.visible) {
 			if(dummy['shape']=="circle") {
 				shp=makeCircle(0,0,dummy['radius']);
+				shphover = makeCircle(0,0,dummy['radius']);
+				shpselect = makeCircle(0,0,dummy['radius']);
 			}
-			else if(dummy['shape']="square") {
+			else if(dummy['shape']=="square") {
 				shp=makeSquare(0,0,dummy['radius'],dummy['rx'],dummy['ry']);
+				shphover=makeSquare(0,0,dummy['radius'],dummy['rx'],dummy['ry']);
+				shpselect=makeSquare(0,0,dummy['radius'],dummy['rx'],dummy['ry']);
 			}
-			shp.setAttributeNS(null, 'style', 'fill: black; stroke: black; stroke-width: 0px;' );
-			node.circle.appendChild(shp);
+			else if(dummy['shape']=="custom") {
+				if(Object.prototype.toString.call(node.svg)=='[object SVGPolygonElement]') {
+					shp = node.svg.cloneNode(true);
+					if(dummy['interactive']==true) {
+						shphover = node.svg.cloneNode(true);
+						shpselect = node.svg.cloneNode(true);
+					}
+				}
+				else {
+					shp = node.svg.normal.cloneNode(true);
+					if(dummy['interactive']==true) {
+						shphover = node.svg.hover.cloneNode(true);	
+						shpselect = node.svg.select.cloneNode(true);
+					}
+				}	
+			}
 
-			if(dummy['shape']=="circle") {
-				shp=makeCircle(0,0,dummy['radius']);
+			if(dummy['shape']!="custom") {
+				shp.setAttributeNS(null, 'style', 'fill: '+dummy.colour+'; stroke: '+dummy.border.colour.normal+'; stroke-width: '+dummy.border.thickness.normal+'px;' );
 			}
-			else if(dummy['shape']="square") {
-				shp=makeSquare(0,0,dummy['radius'],dummy['rx'],dummy['ry']);
+
+			if(dummy.order=="bottom") node.circle.appendChild(shp);
+			if(dummy.interactive) {
+				shphover.style.display = "none";				
+				shpselect.style.display = "none";
+				
+				if(dummy['shape']!="custom" || Object.prototype.toString.call(node.svg)=='[object SVGPolygonElement]') {
+					shpselect.style.stroke=dummy.border.colour.select;
+					shpselect.style.strokeWidth=dummy.border.thickness.select.toString()+"px";
+					shphover.style.stroke=dummy.border.colour.hover;
+					shphover.style.strokeWidth=dummy.border.thickness.hover.toString()+"px";
+				}				
+				
+				node.circle.appendChild(shphover);
+				node.circle.appendChild(shpselect);
 			}
-			shp.setAttributeNS(null, 'style', 'fill: '+dummy.colour+'; stroke: '+dummy.border.colour.normal+'; stroke-width: '+dummy.border.thickness.normal+'px;' );
-			node.circle.appendChild(shp);
+			if(dummy.order!="bottom") node.circle.appendChild(shp);			
 		}
 	}
 
@@ -189,7 +217,7 @@ function render(nervejs,zoom) {
 function createNodes(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
 		node=nervejs.nodes[i];
-		var keys = ['visible','scale'];
+		var keys = ['visible','scale','rotate','interactive'];
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
 
 		delete node.circle;
@@ -198,12 +226,14 @@ function createNodes(nervejs) {
 		node.circle.setAttributeNS(null, 'height', 2);
 		node.circle.setAttributeNS(null, 'x', -1);
 		node.circle.setAttributeNS(null, 'y', -1);
-		node.circle.setAttributeNS(null, 'cursor','pointer');
+		if(dummy.interactive==true) {
+			node.circle.setAttributeNS(null, 'cursor', 'pointer');
+		}
 		node.circle.setAttributeNS(null, 'overflow','visible');
 		node.circle.setAttributeNS(null, 'id', i);
 
 		g = document.createElementNS(svgns, 'g');
-		g.setAttributeNS(null,'transform',"scale("+dummy.scale.toString()+" "+dummy.scale.toString()+")");
+		g.setAttributeNS(null,'transform',"rotate("+dummy.rotate.toString()+") scale("+dummy.scale.toString()+" "+dummy.scale.toString()+")");
 
 		node.circle.appendChild(g);
 
@@ -273,7 +303,7 @@ function getDefaults(deflt,obj,keys) {
 function createEdges(nervejs) {
 	for (var i = 0; i < nervejs.edges.length; i++) {
 		edge = nervejs.edges[i];
-		var keys = ['thickness','colour','visible','dasharray','scale'];
+		var keys = ['thickness','colour','visible','dasharray','scale','interactive'];
 		dummy = getDefaults(nervejs.defaults.edge,edge,keys);
 
 		if (dummy.visible) {
@@ -288,13 +318,14 @@ function createEdges(nervejs) {
 			if(dummy.dasharray.normal!=null) {
 				line.setAttribute("stroke-dasharray", dummy.dasharray.normal);
 			}
-
 			line = document.createElementNS(svgns, 'line');
 			line.setAttribute('x1',nervejs.nodes[edge.from-1].X.toString());
 			line.setAttribute('y1',nervejs.nodes[edge.from-1].Y.toString());
 			line.setAttribute('x2',nervejs.nodes[edge.to-1].X.toString());
 			line.setAttribute('y2',nervejs.nodes[edge.to-1].Y.toString());
-			line.setAttribute('cursor','pointer');
+			if(dummy.interactive==true) {
+				line.setAttributeNS(null, 'cursor', 'pointer');
+			}			
 			line.setAttribute("stroke", "rgba(0,0,0,0)");
 			line.setAttribute("stroke-width", dummy.thickness.normal*dummy.scale*5);
 			line.setAttribute("id", i);
@@ -326,20 +357,31 @@ function createEdges(nervejs) {
 	}
 }
 
-function clickEvent(nervejs,arg, obj) {
+function clickEvent(nervejs,arg,obj) {
 	if(arg>=0) {
 		nervejs.pan[0]=nervejs.container.children[1].transform.baseVal[0].matrix.e;
 		nervejs.pan[1]=nervejs.container.children[1].transform.baseVal[0].matrix.f;
 	}
 
-	if(nervejs.container.children[1].transform.baseVal[0].matrix.e!=nervejs.pan[0] || nervejs.container.children[1].transform.baseVal[0].matrix.f!=nervejs.pan[1]) {
+	if(Math.abs(nervejs.container.children[1].transform.baseVal[0].matrix.e-nervejs.pan[0])>2 || Math.abs(nervejs.container.children[1].transform.baseVal[0].matrix.f-nervejs.pan[1])>2) {
 		nervejs.pan[0]=nervejs.container.children[1].transform.baseVal[0].matrix.e;
 		nervejs.pan[1]=nervejs.container.children[1].transform.baseVal[0].matrix.f;
 		return;
 	}
 
 	if(nervejs.selected>=0) {
-		nervejs.nodes[nervejs.selected].circle.children[0].style.strokeWidth="0px";
+		node = nervejs.nodes[nervejs.selected];
+		keys = ['order'];
+		dummy = getDefaults(nervejs.defaults.node,node,keys);
+		if(dummy.order=='bottom') {
+			index=2;
+		}
+		else {
+			index=1;
+		}		
+		node.circle.children[index].style.display="none";
+		node.circle.children[index-1].style.display="none";
+		//nervejs.nodes[nervejs.selected].circle.children[0].style.strokeWidth="0px";
 	}
 
 	if(nervejs.edgeselected>=0) {
@@ -350,6 +392,25 @@ function clickEvent(nervejs,arg, obj) {
 		nervejs.edges[nervejs.edgeselected].line.setAttribute("stroke-dasharray", dummy.dasharray.normal);
 	}
 
+	if(obj=="node") {
+		var keys = ['interactive'];
+		dummy = getDefaults(nervejs.defaults.node,nervejs.nodes[arg],keys);
+		if(!dummy.interactive) {
+			nervejs.highlighted=-1;
+			nervejs.edgehighlighted=-1;
+			return;
+		}
+	}
+
+	if(obj=="edge") {
+		var keys = ['interactive'];
+		dummy = getDefaults(nervejs.defaults.edge,nervejs.edges[arg],keys);
+		if(!dummy.interactive) {
+			nervejs.highlighted=-1;
+			nervejs.edgehighlighted=-1;
+			return;
+		}
+	}
 
 	if(obj=="node" || obj=="bg") {
 		if(arg==nervejs.selected && nervejs.edgeselected==-1) {
@@ -379,11 +440,18 @@ function clickEvent(nervejs,arg, obj) {
 		}
 		if(arg>=0) {
 			node = nervejs.nodes[arg];
-			keys = ['border.colour','border.thickness'];
+			keys = ['border.colour','border.thickness','order'];
 			dummy = getDefaults(nervejs.defaults.node,node,keys);
-
-			node.circle.children[0].style.stroke=dummy.border.colour.select;
-			node.circle.children[0].style.strokeWidth=dummy.border.thickness.select.toString()+"px";
+			if(dummy.order=='bottom') {
+				index=2;
+			}
+			else {
+				index=1;
+			}
+			node.circle.children[index].style.display="";
+			
+			//node.circle.children[0].style.stroke=dummy.border.colour.select;
+			//node.circle.children[0].style.strokeWidth=dummy.border.thickness.select.toString()+"px";
 		}
 		if(nervejs.selected!=arg) {
 			nervejs.selected=arg;
@@ -430,10 +498,21 @@ function mouseoverEvent(nervejs,arg,obj) {
 	if(obj=="bg" && nervejs.edgehighlighted==-1 && nervejs.highlighted==-1) {
 		return;
 	}
-
+	
 	if (nervejs.highlighted!=-1) {
-		nervejs.nodes[nervejs.highlighted].circle.children[0].style.stroke="black";
-		nervejs.nodes[nervejs.highlighted].circle.children[0].style.strokeWidth="0px";
+		node = nervejs.nodes[nervejs.highlighted];
+		keys = ['order'];
+		dummy = getDefaults(nervejs.defaults.node,node,keys);
+		if(dummy.order=='bottom') {
+			index=2;
+		}
+		else {
+			index=1;
+		}		
+		node.circle.children[index].style.display="none";
+		node.circle.children[index-1].style.display="none";		
+		//nervejs.nodes[nervejs.highlighted].circle.children[0].style.stroke="black";
+		//nervejs.nodes[nervejs.highlighted].circle.children[0].style.strokeWidth="0px";
 	}
 	if (nervejs.edgehighlighted!=-1) {
 		var keys = ['thickness','colour','dasharray','scale'];
@@ -442,6 +521,26 @@ function mouseoverEvent(nervejs,arg,obj) {
 		nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-width", dummy.thickness.normal*dummy.scale);
 		nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-dasharray", dummy.dasharray.normal);
 	}
+	
+	if(obj=="node") {
+		var keys = ['interactive'];
+		dummy = getDefaults(nervejs.defaults.node,nervejs.nodes[arg],keys);
+		if(!dummy.interactive) {
+			nervejs.highlighted=-1;
+			nervejs.edgehighlighted=-1;
+			return;
+		}
+	}
+
+	if(obj=="edge") {
+		var keys = ['interactive'];
+		dummy = getDefaults(nervejs.defaults.edge,nervejs.edges[arg],keys);
+		if(!dummy.interactive) {
+			nervejs.highlighted=-1;
+			nervejs.edgehighlighted=-1;
+			return;
+		}
+	}
 
 	if(obj=="node" || obj=="bg") {
 		if (nervejs.selected!=arg || obj=="bg") {
@@ -449,10 +548,20 @@ function mouseoverEvent(nervejs,arg,obj) {
 			nervejs.edgehighlighted=-1;
 			if(arg>=0) {
 				node = nervejs.nodes[arg];
-				keys = ['border.colour','border.thickness'];
+				keys = ['border.colour','border.thickness','order'];
 				dummy = getDefaults(nervejs.defaults.node,node,keys);
-				nervejs.nodes[arg].circle.children[0].style.stroke=dummy.border.colour.hover;
-				nervejs.nodes[arg].circle.children[0].style.strokeWidth=dummy.border.thickness.hover.toString()+"px";
+				if(dummy.order=='bottom') {
+					index=2;
+				}
+				else {
+					index=1;
+				}
+				node.circle.children[index-1].style.display="";				
+				//node = nervejs.nodes[arg];
+				//keys = ['border.colour','border.thickness'];
+				//dummy = getDefaults(nervejs.defaults.node,node,keys);
+				//nervejs.nodes[arg].circle.children[0].style.stroke=dummy.border.colour.hover;
+				//nervejs.nodes[arg].circle.children[0].style.strokeWidth=dummy.border.thickness.hover.toString()+"px";
 			}
 		}
 	}
@@ -497,6 +606,9 @@ function createSVGnetwork(nodes,edges) {
 				colour: "black",
 				shape: 'circle',
 				scale: 1,
+				rotate: 0,
+				interactive: true,
+				order: 'top',
 				border: {
 					colour: {
 						normal:"white",
@@ -526,6 +638,7 @@ function createSVGnetwork(nodes,edges) {
 			},
 			edge: {
 				scale: 1,
+				interactive: false,
 				colour: {
 					normal: "black",
 					hover: "blue",
