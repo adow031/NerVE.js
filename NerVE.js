@@ -1,5 +1,44 @@
 var svgns = "http://www.w3.org/2000/svg";
 
+function update_node_style(nervejs) {
+	for (var i = 0; i < nervejs.nodes.length; i++) {
+		var node = nervejs.nodes[i];
+		var keys = ['visible','colour','border.thickness','border.colour'];
+		dummy = getDefaults(nervejs.defaults.node,node,keys);
+
+		if (node.circle!=undefined && node.circle.children[1]!=undefined) {
+			shp=node.circle.children[1];
+			shp.setAttributeNS(null, 'style', 'fill: '+dummy.colour+'; stroke: '+dummy.border.colour.normal+'; stroke-width: '+dummy.border.thickness.normal+'px;' );
+		}
+	}
+}
+
+function update_node_text(nervejs) {
+	for (var i = 0; i < nervejs.nodes.length; i++) {
+		var node = nervejs.nodes[i];
+		if (node.text!=undefined && node.text!=null && node.text.content!="" && node.circle.children[2]!=undefined) {
+			if(node.circle.children[2].constructor==SVGTextElement) {
+				// var keys = ['text.offset','text.halign','text.fontsize','text.valign','text.stroke','text.fill','text.strokewidth','text.fontweight'];
+				// dummy = getDefaults(nervejs.defaults.node,node,keys);
+				text=node.circle.children[2];
+				// text.setAttributeNS(null, 'text-anchor', dummy.text.halign);
+				// text.setAttributeNS(null, 'font-size', dummy.text.fontsize);
+				// text.setAttributeNS(null, 'dominant-baseline', dummy.text.valign);
+				// text.setAttributeNS(null, 'stroke', dummy.text.stroke);
+				// text.setAttributeNS(null, 'stroke-width', dummy.text.strokewidth);
+				// text.setAttributeNS(null, 'fill', dummy.text.fill);
+				// text.setAttributeNS(null, 'font-weight', dummy.text.fontweight);
+				text.textContent=node.text.content;
+			}
+		}
+		if(node.tooltip!=undefined && node.tooltip!=null && node.tooltip!="" && node.circle.children[3]!=undefined) {
+			if(node.circle.children[3].constructor==SVGTitleElement) {
+				node.circle.children[3].textContent = node.tooltip;
+			}
+		}
+	}
+}
+
 function redraw_nodes(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
 		var circle;// = document.createElementNS(svgns, 'circle');
