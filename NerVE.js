@@ -24,8 +24,6 @@ function update_node_text(nervejs) {
 		var node = nervejs.nodes[i];
 		if (node.text!=undefined && node.text!=null && node.text.content!="" && node.circle.children[1]!=undefined && node.circle.children[1].children[0]!=undefined) {
 			if(node.circle.children[1].children[0].constructor==SVGTextElement) {
-				// var keys = ['text.offset','text.halign','text.fontsize','text.valign','text.stroke','text.fill','text.strokewidth','text.fontweight'];
-				// dummy = getDefaults(nervejs.defaults.node,node,keys);
 				text=node.circle.children[1].children[0];
 				text.textContent=node.text.content;
 			}
