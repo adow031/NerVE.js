@@ -524,6 +524,9 @@ function mouseoverEvent(nervejs,arg,obj) {
 				}
 				node.circle.children[0].children[index-1].style.display="";				
 			}
+			if (typeof node_hover === 'function') {
+				node_hover(nervejs,nervejs.highlighted);
+			}
 		}
 	}
 
@@ -537,6 +540,9 @@ function mouseoverEvent(nervejs,arg,obj) {
 				nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke", dummy.colour.hover);
 				nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-width", dummy.thickness.hover*dummy.scale);
 				nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-dasharray", dummy.dasharray.hover);
+				if (typeof edge_hover === 'function') {
+					edge_hover(nervejs,nervejs.edgehighlighted);
+				}				
 			}
 		}
 	}
@@ -552,11 +558,21 @@ function clearSVGnetwork(nervejs) {
 }
 
 function createSVGnetwork(nodes,edges) {
+	nodes_copy = JSON.parse(JSON.stringify(nodes));
+	
+	for(i=0;i<nodes.length;i++) {
+		if(nodes[i].svg!=undefined) {		
+			nodes_copy[i].svg = nodes[i].svg;
+		}
+	}
+
+	edges_copy = JSON.parse(JSON.stringify(edges));
+	
 	var nervejs = {
 		container: null,
 		zoomTree: null,
-		nodes: nodes,
-		edges: edges,
+		nodes: nodes_copy,
+		edges: edges_copy,
 	  pan: [-1,-1],
 	  selected: -1,
 		highlighted: -1,
@@ -631,32 +647,32 @@ function createSVGnetwork(nodes,edges) {
 	container.setAttribute ("height", "100%");
 	container.setAttributeNS(null, 'style', 'padding: 0px;' );
 	container.addEventListener('wheel', evt => evt.preventDefault());
-	container.onclick = (function (network) {
+	container.onclick = (function (nervejs_) {
 				return function () {
 					event.stopPropagation();
 					if(event.target.constructor==SVGSVGElement) {
-						clickEvent(network,-1,"bg");
+						clickEvent(nervejs_,-1,"bg");
 					}
 					else if(event.target.constructor==SVGLineElement) {
-						clickEvent(network,parseInt(event.target.id),"edge");
+						clickEvent(nervejs_,parseInt(event.target.id),"edge");
 					}
 					else if(event.target.parentElement.parentElement.parentElement.id!=undefined) {
-						clickEvent(network,parseInt(event.target.parentElement.parentElement.parentElement.id),"node");
+						clickEvent(nervejs_,parseInt(event.target.parentElement.parentElement.parentElement.id),"node");
 					}
 				};
 			})(nervejs);
 
-	container.onmouseover = (function (nervejs,arg) {
+	container.onmouseover = (function (nervejs_) {
 				return function () {
 					event.stopPropagation();
 					if(event.target.constructor==SVGSVGElement) {
-						mouseoverEvent(network,-1,"bg");
+						mouseoverEvent(nervejs_,-1,"bg");
 					}
 					else if(event.target.constructor==SVGLineElement) {
-						mouseoverEvent(network,parseInt(event.target.id),"edge");
+						mouseoverEvent(nervejs_,parseInt(event.target.id),"edge");
 					}
 					else if(event.target.parentElement.parentElement.parentElement.id!=undefined) {
-						mouseoverEvent(network,parseInt(event.target.parentElement.parentElement.parentElement.id),"node");
+						mouseoverEvent(nervejs_,parseInt(event.target.parentElement.parentElement.parentElement.id),"node");
 					}
 				};
 			})(nervejs);
