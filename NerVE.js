@@ -12,7 +12,7 @@ function update_node_style(nervejs) {
 			index=0;
 		}
 
-		if (node.circle!=undefined && node.circle.children[0].children[index]!=undefined) {
+		if (node.circle!=undefined && node.circle.children[0]!=undefined && node.circle.children[0].children[index]!=undefined) {
 			shp=node.circle.children[0].children[index];
 			shp.setAttributeNS(null, 'style', 'fill: '+dummy.colour+'; stroke: '+dummy.border.colour.normal+'; stroke-width: '+dummy.border.thickness.normal+'px;' );
 		}
@@ -22,17 +22,17 @@ function update_node_style(nervejs) {
 function update_node_text(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
 		var node = nervejs.nodes[i];
-		if (node.text!=undefined && node.text!=null && node.text.content!="" && node.circle.children[2]!=undefined) {
-			if(node.circle.children[2].constructor==SVGTextElement) {
+		if (node.text!=undefined && node.text!=null && node.text.content!="" && node.circle.children[1]!=undefined && node.circle.children[1].children[0]!=undefined) {
+			if(node.circle.children[1].children[0].constructor==SVGTextElement) {
 				// var keys = ['text.offset','text.halign','text.fontsize','text.valign','text.stroke','text.fill','text.strokewidth','text.fontweight'];
 				// dummy = getDefaults(nervejs.defaults.node,node,keys);
-				text=node.circle.children[2];
+				text=node.circle.children[1].children[0];
 				text.textContent=node.text.content;
 			}
 		}
-		if(node.tooltip!=undefined && node.tooltip!=null && node.tooltip!="" && node.circle.children[3]!=undefined) {
-			if(node.circle.children[3].constructor==SVGTitleElement) {
-				node.circle.children[3].textContent = node.tooltip;
+		if(node.tooltip!=undefined && node.tooltip!=null && node.tooltip!="" && node.circle.children[2]!=undefined) {
+			if(node.circle.children[2].constructor==SVGTitleElement) {
+				node.circle.children[2].textContent = node.tooltip;
 			}
 		}
 	}
@@ -102,8 +102,9 @@ function redraw_nodes(nervejs) {
 		var node = nervejs.nodes[i];
 		var keys = ['visible','text.offset','text.halign','text.fontsize','text.valign','text.stroke','text.fill','text.strokewidth','text.fontweight'];
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
-
 		if (dummy.visible) {
+			var textsvg = document.createElementNS(svgns, 'svg');
+			textsvg.setAttributeNS(null, 'overflow','visible');			
 			if (node.text!=undefined && node.text!=null && node.text.content!="") {
 				text=document.createElementNS(svgns, 'text');
 				text.setAttributeNS(null, 'x', dummy.text.offset[0]);
@@ -116,13 +117,14 @@ function redraw_nodes(nervejs) {
 				text.setAttributeNS(null, 'fill', dummy.text.fill);
 				text.setAttributeNS(null, 'font-weight', dummy.text.fontweight);
 				text.appendChild(document.createTextNode(node.text.content));
-				node.circle.appendChild(text);
+				textsvg.appendChild(text);
 			}
+			node.circle.appendChild(textsvg);
 			if(node.tooltip!=undefined && node.tooltip!=null && node.tooltip!="") {
 				var title = document.createElementNS(svgns,"title");
 				title.textContent = node.tooltip;
 				node.circle.appendChild(title);
-			}
+			}			
 		}
 	}
 }
