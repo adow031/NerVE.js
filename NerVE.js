@@ -634,10 +634,9 @@ function createSVGnetwork(nodes,edges) {
 		}
 	};
 
-	//container = document.createElementNS(svgns, "svg");
 	container = document.createElement("div");
-  svg2 = '<svg xmlns="http://www.w3.org/2000/svg">content</svg>';
-	joined='<defs><filter id="my-filter" x="-20" y="-20" width="50" height="50" > <feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" /> <feColorMatrix result="matrixOut" in="offOut" type="matrix" values=" 0.49 0 0 0 0 0 0.49 0 0 0 0 0 0.49 0 0 0 0 0 1 0" /> <feGaussianBlur result="blurOut" in="matrixOut" stdDeviation="9" /> <feBlend in="SourceGraphic" in2="blurOut" mode="normal" /> </filter></defs>'
+	svg2 = '<svg xmlns="http://www.w3.org/2000/svg">content</svg>';
+	joined='<defs></defs>';
 
 	container.innerHTML = svg2.replace('content',joined);
 	container = container.children[0];
