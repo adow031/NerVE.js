@@ -520,7 +520,7 @@ function mouseoverEvent(nervejs,arg,obj) {
 				else {
 					index=1;
 				}
-				node.circle.children[0].children[index-1].style.display="";				
+				node.circle.children[0].children[index-1].style.display="";
 			}
 			if (typeof node_hover === 'function') {
 				node_hover(nervejs,nervejs.highlighted);
@@ -540,7 +540,7 @@ function mouseoverEvent(nervejs,arg,obj) {
 				nervejs.edges[nervejs.edgehighlighted].line.setAttribute("stroke-dasharray", dummy.dasharray.hover);
 				if (typeof edge_hover === 'function') {
 					edge_hover(nervejs,nervejs.edgehighlighted);
-				}				
+				}
 			}
 		}
 	}
@@ -555,17 +555,25 @@ function clearSVGnetwork(nervejs) {
 	}
 }
 
-function createSVGnetwork(nodes,edges) {
-	nodes_copy = JSON.parse(JSON.stringify(nodes));
-	
-	for(i=0;i<nodes.length;i++) {
-		if(nodes[i].svg!=undefined) {		
-			nodes_copy[i].svg = nodes[i].svg;
+function createSVGnetwork(nodes,edges,create_copy=true) {
+	if(create_copy) {
+		nodes_copy = JSON.parse(JSON.stringify(nodes));
+		edges_copy = JSON.parse(JSON.stringify(edges));
+
+		for(i=0;i<nodes.length;i++) {
+			if(nodes[i].svg!=undefined) {
+				nodes_copy[i].svg = nodes[i].svg;
+			}
 		}
 	}
+	else {
+		nodes_copy = nodes;
+		edges_copy = edges;
+	}
 
-	edges_copy = JSON.parse(JSON.stringify(edges));
-	
+
+
+
 	var nervejs = {
 		container: null,
 		zoomTree: null,
