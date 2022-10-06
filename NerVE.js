@@ -66,10 +66,10 @@ function redraw_nodes(nervejs) {
 				else {
 					shp = node.svg.normal.cloneNode(true);
 					if(dummy['interactive']==true) {
-						shphover = node.svg.hover.cloneNode(true);	
+						shphover = node.svg.hover.cloneNode(true);
 						shpselect = node.svg.select.cloneNode(true);
 					}
-				}	
+				}
 			}
 
 			if(dummy['shape']!="custom") {
@@ -78,20 +78,20 @@ function redraw_nodes(nervejs) {
 
 			if(dummy.order=="bottom") nodesvg.appendChild(shp);
 			if(dummy.interactive) {
-				shphover.style.display = "none";				
+				shphover.style.display = "none";
 				shpselect.style.display = "none";
-				
+
 				if(dummy['shape']!="custom" || Object.prototype.toString.call(node.svg)=='[object SVGPolygonElement]') {
 					shpselect.style.stroke=dummy.border.colour.select;
 					shpselect.style.strokeWidth=dummy.border.thickness.select.toString()+"px";
 					shphover.style.stroke=dummy.border.colour.hover;
 					shphover.style.strokeWidth=dummy.border.thickness.hover.toString()+"px";
-				}				
-				
+				}
+
 				nodesvg.appendChild(shphover);
 				nodesvg.appendChild(shpselect);
 			}
-			if(dummy.order!="bottom") nodesvg.appendChild(shp);			
+			if(dummy.order!="bottom") nodesvg.appendChild(shp);
 			node.circle.appendChild(nodesvg);
 		}
 	}
@@ -102,7 +102,7 @@ function redraw_nodes(nervejs) {
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
 		if (dummy.visible) {
 			var textsvg = document.createElementNS(svgns, 'svg');
-			textsvg.setAttributeNS(null, 'overflow','visible');			
+			textsvg.setAttributeNS(null, 'overflow','visible');
 			if (node.text!=undefined && node.text!=null && node.text.content!="") {
 				text=document.createElementNS(svgns, 'text');
 				text.setAttributeNS(null, 'x', dummy.text.offset[0]);
@@ -122,7 +122,7 @@ function redraw_nodes(nervejs) {
 				var title = document.createElementNS(svgns,"title");
 				title.textContent = node.tooltip;
 				node.circle.appendChild(title);
-			}			
+			}
 		}
 	}
 }
@@ -310,7 +310,7 @@ function createEdges(nervejs) {
 			line.setAttribute('y2',nervejs.nodes[edge.to-1].Y.toString());
 			if(dummy.interactive==true) {
 				line.setAttributeNS(null, 'cursor', 'pointer');
-			}			
+			}
 			line.setAttribute("stroke", "rgba(0,0,0,0)");
 			line.setAttribute("stroke-width", dummy.thickness.normal*dummy.scale*5);
 			line.setAttribute("id", i);
@@ -327,7 +327,7 @@ function createEdges(nervejs) {
 	}
 }
 
-function clickEvent(nervejs,arg,obj) {
+function clickEvent(nervejs,arg,obj,propagate=true) {
 	if(arg>=0) {
 		nervejs.pan[0]=nervejs.container.children[1].transform.baseVal[0].matrix.e;
 		nervejs.pan[1]=nervejs.container.children[1].transform.baseVal[0].matrix.f;
@@ -348,7 +348,7 @@ function clickEvent(nervejs,arg,obj) {
 		}
 		else {
 			index=1;
-		}		
+		}
 		node.circle.children[0].children[index].style.display="none";
 		node.circle.children[0].children[index-1].style.display="none";
 	}
@@ -383,7 +383,7 @@ function clickEvent(nervejs,arg,obj) {
 
 	if(obj=="node" || obj=="bg") {
 		if(arg==nervejs.selected && nervejs.edgeselected==-1) {
-			if(typeof(doubleclickEvent)!="undefined") {
+			if(typeof(doubleclickEvent)!="undefined" && propagate) {
 				doubleclickEvent(nervejs.selected);
 				return;
 			}
@@ -392,7 +392,7 @@ function clickEvent(nervejs,arg,obj) {
 
 	if(obj=="edge" || obj=="bg") {
 		if(arg==nervejs.edgeselected && nervejs.selected==-1) {
-			if(typeof(edgedoubleclickEvent)!="undefined") {
+			if(typeof(edgedoubleclickEvent)!="undefined" && propagate) {
 				edgedoubleclickEvent(arg);
 				return;
 			}
@@ -403,7 +403,7 @@ function clickEvent(nervejs,arg,obj) {
 		nervejs.highlighted=-1;
 		if(nervejs.edgeselected!=-1) {
 			nervejs.edgeselected=-1;
-			if (typeof edge_select === 'function') {
+			if (typeof edge_select === 'function' && propagate) {
 				edge_select(nervejs,nervejs.edgeselected);
 			}
 		}
@@ -421,7 +421,7 @@ function clickEvent(nervejs,arg,obj) {
 		}
 		if(nervejs.selected!=arg) {
 			nervejs.selected=arg;
-			if (typeof node_select === 'function') {
+			if (typeof node_select === 'function' && propagate) {
 				node_select(nervejs,nervejs.selected);
 			}
 		}
@@ -430,7 +430,7 @@ function clickEvent(nervejs,arg,obj) {
 		nervejs.edgehighlighted=-1;
 		if(nervejs.selected!=-1) {
 			nervejs.selected=-1;
-			if (typeof node_select === 'function') {
+			if (typeof node_select === 'function' && propagate) {
 				node_select(nervejs,nervejs.selected);
 			}
 		}
@@ -445,7 +445,7 @@ function clickEvent(nervejs,arg,obj) {
 		}
 		if(nervejs.edgeselected!=arg) {
 			nervejs.edgeselected=arg;
-			if (typeof edge_select === 'function') {
+			if (typeof edge_select === 'function' && propagate) {
 				edge_select(nervejs,nervejs.edgeselected);
 			}
 		}
@@ -464,7 +464,7 @@ function mouseoverEvent(nervejs,arg,obj) {
 	if(obj=="bg" && nervejs.edgehighlighted==-1 && nervejs.highlighted==-1) {
 		return;
 	}
-	
+
 	if (nervejs.highlighted!=-1) {
 		node = nervejs.nodes[nervejs.highlighted];
 		keys = ['order'];
@@ -474,9 +474,9 @@ function mouseoverEvent(nervejs,arg,obj) {
 		}
 		else {
 			index=1;
-		}		
+		}
 		node.circle.children[0].children[index].style.display="none";
-		node.circle.children[0].children[index-1].style.display="none";		
+		node.circle.children[0].children[index-1].style.display="none";
 	}
 	if (nervejs.edgehighlighted!=-1) {
 		var keys = ['thickness','colour','dasharray','scale'];
