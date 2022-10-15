@@ -1,0 +1,145 @@
+<html>
+
+<head>
+<script src="svg-pan-zoom/svg-pan-zoom.min.js"></script>
+<script src="hammer.js"></script>
+<script src="NerVE.js"></script>
+</head>
+
+<div style="width: calc(50% - 4px);float: left">
+<div id="box", style="background:#FFFFFF;height:500px;border-color:000000;border-style:solid"></div>
+<div id="selection", style="background:#FFFFFF"></div>
+</div>
+<div style="width: calc(50% - 4px);float: right">
+<div id="box2", style="background:#FFFFFF;height:500px;border-color:000000;border-style:solid"></div>
+<div id="selection2", style="background:#FFFFFF"></div>
+</div>
+
+<script>
+var backup="";
+var backup2="";
+
+function rgbToHex(r, g, b) {
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function node_select(nervejs,arg) {
+	if(nervejs==network) {
+		slct = document.getElementById("selection");
+	}
+	else if(nervejs==network2) {
+		slct = document.getElementById("selection2");
+	}
+	if(arg==-1) {
+		slct.innerHTML = "Nothing selected";
+	}
+	else {
+		slct.innerHTML = " Node selected: " + arg;
+	}
+	if(nervejs==network) {
+		backup = slct.innerHTML;
+	}
+	else if(nervejs==network2) {
+		backup2 = slct.innerHTML;
+	}
+}
+
+function node_hover(nervejs,arg) {
+	if(nervejs==network) {
+		slct = document.getElementById("selection");
+		b=backup;
+	}
+	else if(nervejs==network2) {
+		slct = document.getElementById("selection2");
+		b=backup2;
+	}
+	if(arg==-1) {
+		slct.innerHTML = b;
+	}
+	else {
+		slct.innerHTML = " Node hovered: " + arg;
+	}
+}
+
+function edge_select(nervejs,arg) {
+	if(nervejs==network) {
+		slct = document.getElementById("selection");
+	}
+	else if(nervejs==network2) {
+		slct = document.getElementById("selection2");
+	}	
+	if(arg==-1) {
+		slct.innerHTML = "Nothing selected";
+	}
+	else {	
+		slct.innerHTML = nervejs.name + " Edge selected: " + arg;
+	}
+	if(nervejs==network) {
+		backup = slct.innerHTML;
+	}
+	else if(nervejs==network2) {
+		backup2 = slct.innerHTML;
+	}
+}
+
+function edge_hover(nervejs,arg) {
+	if(nervejs==network) {
+		slct = document.getElementById("selection");
+		b=backup;
+	}
+	else if(nervejs==network2) {
+		slct = document.getElementById("selection2");
+		b=backup2;
+	}
+	if(arg==-1) {
+		slct.innerHTML = b;
+	}
+	else {
+		slct.innerHTML = nervejs.name + " Edge hovered: " + arg;
+	}
+}
+
+custom = document.createElementNS(svgns, 'polygon');
+custom.setAttributeNS(null, 'points', "80,0 15,15 0,80 -15,15 -80,0 -15,-15 0,-80 15,-15");
+custom.style.fill="#AA0000";
+custom.style["stroke-width"]=2;
+custom.style["stroke"]="#FFFFFF";
+custom.style["stroke-linejoin"]="round";
+
+custom2 = document.createElementNS(svgns, 'polygon');
+custom2.setAttributeNS(null, 'points', "30,-5 30,5 5,5 5,30 -5,30 -5,5 -30,5 -30,-5 -5,-5 -5,-30 5,-30 5,-5");
+custom2.style.fill="#AA0000";
+custom2.style["stroke-width"]=2;
+custom2.style["stroke"]="#FFFFFF";
+custom2.style["stroke-linejoin"]="round";
+
+nodes=[]
+for(i=0;i<40;i++) {
+	temp = custom.cloneNode(true);
+	temp.style.fill=rgbToHex(Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256));
+	nodes.push({X:Math.floor(Math.random()*2000),Y:Math.floor(Math.random()*2000),interactive:true,scale:Math.random()*1.5+0.5,rotate:90*Math.random(),shape:"custom",svg:temp,order:"top",interactive:true});
+}
+
+edges=[]
+for(i=0;i<0;i++) {
+	r = Math.ceil(Math.random()*39);
+	edges.push({from:r,to:r+1,interactive:true});
+}
+
+network = createSVGnetwork(nodes,edges)
+document.getElementById("box").appendChild(network.container);
+render(network,0.98)
+
+for(i=0;i<40;i++) {
+	temp = custom2.cloneNode(true);
+	temp.style.fill=rgbToHex(Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256));
+	nodes[i].svg=temp;
+	nodes[i].scale*=1.6;
+}
+
+network2 = createSVGnetwork(nodes,edges)
+document.getElementById("box2").appendChild(network2.container);
+render(network2,0.98)
+</script>
+
+</html>
