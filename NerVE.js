@@ -548,7 +548,9 @@ function mouseoverEvent(nervejs,arg,obj) {
 
 function clearSVGnetwork(nervejs) {
 	for(n in nervejs.nodes) {
-		nervejs.nodes[n].circle.innerHTML="";
+		if (nervejs.nodes[n].circle!=undefined) {
+			nervejs.nodes[n].circle.innerHTML="";
+		}
 	}
 	if (nervejs.container.parentElement!=undefined) {
 		nervejs.container.parentElement.innerHTML="";
@@ -570,9 +572,6 @@ function createSVGnetwork(nodes,edges,create_copy=true) {
 		nodes_copy = nodes;
 		edges_copy = edges;
 	}
-
-
-
 
 	var nervejs = {
 		container: null,
