@@ -38,10 +38,10 @@ function update_node_text(nervejs) {
 
 function redraw_nodes(nervejs) {
 	for (var i = 0; i < nervejs.nodes.length; i++) {
-		node.circle.innerHTML = "";
 		var nodesvg = document.createElementNS(svgns, 'svg');
 		nodesvg.setAttributeNS(null, 'overflow','visible');
 		var node = nervejs.nodes[i];
+		node.circle.innerHTML = "";
 		var keys = ['radius','visible','border.thickness','border.colour','shape','rx','ry','colour','interactive','order'];
 		dummy = getDefaults(nervejs.defaults.node,node,keys);
 
